@@ -1,2 +1,179 @@
-# Ofox-DB-NoMagisk-1.9.2_Rev3-twrp
- Oneplus7/pro  AB userdata dualboot a,c,b builder based on orangefox now 4 newer recoveries like 12
+# Orangefox-DualBoot-Guac-Unified
+
+### THANKS TO:
+
+* Zackptg5 - The master of this mod
+* Ae3NerdGod, Neel P, Whismasterflo
+* muphetz, Varun Soma - for testing
+
+Modified TWRP (Mauronofrio's build) and installer script for all OP7/Pro/5G variants that re-purposes userdata for true dual booting. You can still use this as a regular stock twrp zip - one stop shop for magisk, verity, and/or forced encryption modifications
+
+## Disclaimer
+* I am not responsible for anything bad that happens to your device. Only users with experience should use this mod
+* This is no walk in the park. Although I have extensively tested it, there is always a possibility of  bricking with anything that involves repartitioning. 
+Make sure you have a backup and know how to reparititon your phone back to stock (there's a guide at the end of this readme with the basics)
+* **YOU'VE BEEN WARNED - Use at your own risk**
+
+## Limitations
+* If you set a password, regardless of encryption status, it'll corrupt the other slot if it's also password protected. 
+  * Note that some roms set one automatically
+    Either don't use a password on one slot, or leave one slot (I'll use 'a' in this example) **unencrypted** and:
+    * Setup rom, password, and everything on slot a
+    * Boot back into twrp, choose common data as storage, and backup userdata (if not using a/b/c layout, backup TWRP folder to your computer)
+    * Setup rom, password, and everything on the other slot (b)
+    * Boot back into twrp, switch back to slot a (reboot back into twrp), and restore the twrp backup
+  * If you messed this up and are unencrypted - delete these files in /data/system if present: locksettings.db gatekeeper.password.key password.key gatekeeper.pattern.key pattern.key gatekeeper.gesture.key gesture.key
+  * If you messed this up and are encrypted - you lost the data on that slot:
+    * Unmount metadata in twrp gui
+    * Format metadata with this command: `mke2fs -t ext4 -b 4096 /dev/block/sda$metadata_partnum` where *metadata_partnum* is the partition number of the current metadata partition (you can find this with `sgdisk /dev/block/sda --print`). DO NOT FORGET THE PARTITION NUMBER. If you do, you'll format all of sda which results in a brick
+    * Reboot into twrp and format data in gui
+* Storage settings only supports 128 and 256gb userdata partitions
+  * Just a cosmetic issue as it'll say that system is taking up the difference
+
+## Some other features/notes
+* Can choose between stock layout, a/b userdata, or a/b/c userdata where 'c' is a common data partition that'll show up in both roms - it's quite handy
+* Option to choose between ext4 and f2fs
+* Disables verity - fstabs are modified for dual boot and so this is a must unless you choose stock layout in which case it's optional
+* Option to disable forced encryption
+* Option to install magisk
+* Quickmode for faster rom testing
+* Failsafe to keep from changing slots automatically when used in conjunction with rom install
+
+## Common Data
+* If you choose a/b/c layout - you'll have a/b userdata, but you'll also get a 3rd userdata partition I call 'Common Data'
+* The name 'Common Data' gives away its purpose - to store files that you'll access on both slots/roms. So stuff like zips, pictures, music, TWRP backups, etc.
+* In TWRP, this shows up as another storage option for backup/restore and on your pc as well - your phone will have 'Common Storage' and 'Internal Storage'
+* In order to be accessible when booted, some parts of the system are modified so that the it'll be accessible WITHOUT root by the following mechanisms:
+  * The common data partition is mounted to /sdcard/CommonData
+  * .nomedia file is placed in CommonData so files in it won't be picked up twice if you decide to mount over internal storage as outlined below
+  * Furthermore, if your use case is like mine where my music files are in common data, you can make 'mounts.txt' file in /datacommon containing a list of every FOLDER to mount directly over top of sdcard. So for example:<br/>
+  /datacommon/Music -> /sdcard/Music
+    * This of course mounts over anything there (overwrites it for as long as it's mounted) so make sure that you don't have the same folder in both datacommon and regular data
+    * Note that there are 3 exceptions to this folder mounting rule:
+      * All - if this is the FIRST line, ALL folders in datacommon will be mounted
+      * Android
+      * lost+found
+    * The reasoning should be obvious - lost+found isn't something you should need to mess with and Android is for regular data partition only - that's OS specific and should be on separate slots
+    * Note that you should have 1 folder listed on every line, for example:
+      ```DCIM
+      Music
+      Pictures
+      ViPER4AndroidFX
+      ```
+
+## Flashing Instructions
+* You MUST be booted into TWRP already when flashing this zip ([you can grab a bootable twrp image from here](https://forum.xda-developers.com/oneplus-7/oneplus-7--7-pro-cross-device-development/recovery-unofficial-twrp-recovery-t3932943))
+* Since this modifies data - the zip CANNOT be on sdcard or data at all UNLESS you do not want to repartition/format
+  * If you flash from data, the zip will copy itself to /tmp and instruct you to flash it from there OR you can just install twrp/magisk/disver-fec
+  * You could do the above or copy it to a place like /dev or /tmp and flash it from there
+  * Alternatively, you can adb sideload it
+* Read through ALL the prompts - there's lots of options :)
+
+
+## How to Flash Roms 
+* Nothing changes here except ONLY FLASH IN RECOVERY (ORANGE FOX)
+  * Roms always flash to the opposite slot. Keep that in mind and you'll be fine
+  * So don't take an OTA while booted - boot into twrp, switch slots, reboot into twrp, flash rom
+* Normal flash procedure:
+  * Boot into twrp
+  * reboot into twrp selecting slot you do NOT want rom installed to
+  * Flash rom
+  * Flash this zip
+  * Reboot into twrp 
+	* When using failsafe mode, 
+		* RECOVERY will boot into the slot you were in BEFORE you flashed the rom.
+		* RECOVERY will almost certainly show the incorrect "current slot" at the reboot menu.
+		* The slot selection buttons still work. If youve kept track in youre head, and the zip didnt fail; pick the correct slot now
+		* or reboot to recovery, then switch into the slot which contains the new rom youve just installed
+  * Flash everything else
+  
+## Quickmode usage     
+## NOT RESPONSIBLE FOR BUGS, BRICKS OR MISTAKES!  USE AT OWN RISK!
+* Change the zip name to enable quickmode options (Case Sensitive!)
+  * keeps current layout
+  * add the word ` quick ` in the zip file to enable quickmode with the following default options:
+    * ForceEncryption disabled for both slots
+	* Magisk installed to both slots
+	
+  * add any of the following options to the name of the zipfile to custimize quickmode to your liking, capitilizing the letter of the slot youd like to enable that option for: 
+ 	* For FEC
+		* A-Will ` keep ` forceencrypt (if rom forces it) for slot A
+		* a-Will ` disable ` forceencrypt (if rom forces it) for slot A
+		* B-Will ` keep ` forceencrypt (if rom forces it) for slot B
+		* b-Will ` disable ` forceencrypt (if rom forces it) for slot B
+	
+	* For Magisk
+		* A-Will ` install magisk ` to slot A
+		* a-Will ` not install ` magisk to slot A
+		* B-Will ` install ` magsik to slot B
+		* b-Will ` not install ` magisk to slot B
+	
+    * Example: if the file is named ` OrangeFox-DualBoot-fast-fec.Ab-su.aB.zip ` then:
+	  * ForceEncryption will be ENABLED on slot _a but disabled on slot _b
+	  * Magisk will not be installed on slot _a, but  installed on slot _b
+	  
+  *	 **ADVANCED USERS ONLY** NOT RESPONSIBLE FOR BUGS, BRICKS OR MISTAKES!  USE AT OWN RISK!
+	* ` confirm.y ` will skip the final confirmation before any work is done, and run the options chosen or defaults if none specified
+	* the word ` warp ` this can be used instead of ` fast ` or ` quick ` and ` confirm.y ` if you'd also like to use quickmode without confirmation 
+
+## Failsafe usage / explaination
+	Ive had a few instances where a rom doesnt agree with whats going on, and the dualboot zip gets stuck on a slot and never finishes. This results in forcing the phone off, and leaves the phone in a non bootable state, with an unprepared slot. Not to mention a stock, or worse, no recovery at all. Bootloop city. 
+	Enter the failsafe option: just add ` nofail ` or ` failsafe ` (case sensitive) to the zip name like above, and the zip will revert the slot change caused by the rom install and keep you able to boot back into the current slot's OrangeFox so you can sort out the slot youre working on. Pair this with a usb drive or commondata, and youre (relatively) safe to flash on the go, or from your bed with the computer off. 
+	
+	* Notes 
+		* After applying the failsafe, the reboot screen in OrangeFox will ALMOST CERTANLY show the incorrect slot until you either manually select a slot or reboot recovery. 
+		* This adds a step or two to the flashing process, make sure you've read that.
+
+
+## Help! I Can't Boot!
+* Usually this is because you switched roms without formatting data first. This should be flashing 101 but we all forget sometimes. Plus this slot stuff can get confusing
+* If it only happens with a/b/c and not any other layout, there's a good chance it's selinux related. Try setting selinux to permissive at kernel level [with this mod](https://zackptg5.com/android.php#ksp) ([source here](https://github.com/Zackptg5/Kernel-Sepolicy-Patcher)).
+
+
+## How to Manually Repartition Back to Stock
+* In the event any step in the repartioning fails, the entire installer aborts. The good news is that this prevents a potential brick. The bad is that you need to manually revert back
+* Boot into twrp. If sgdisk is not present in sbin, grab it from this zip (in tools) and adb push it to /sbin and chmod +x it
+* `sgdisk /dev/block/sda --print` Note that /dev/block/sda is the block that userdata and metadata are stored on - no other block is touched by this mod. 
+This will show up the current partition scheme. Stock looks something like this (on OP7 Pro):
+```
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1               6               7   8.0 KiB     FFFF  ssd
+   2               8            8199   32.0 MiB    FFFF  persist
+   3            8200            8455   1024.0 KiB  FFFF  misc
+   4            8456            8711   1024.0 KiB  FFFF  param
+   5            8712            8839   512.0 KiB   FFFF  keystore
+   6            8840            8967   512.0 KiB   FFFF  frp
+   7            8968           74503   256.0 MiB   FFFF  op2
+   8           74504           77063   10.0 MiB    FFFF  oem_dycnvbk
+   9           77064           79623   10.0 MiB    FFFF  oem_stanvbk
+  10           79624           79879   1024.0 KiB  FFFF  mdm_oem_dycnvbk
+  11           79880           80135   1024.0 KiB  FFFF  mdm_oem_stanvbk
+  12           80136           80263   512.0 KiB   FFFF  config
+  13           80264          969095   3.4 GiB     FFFF  system_a
+  14          969096         1857927   3.4 GiB     FFFF  system_b
+  15         1857928         1883527   100.0 MiB   FFFF  odm_a
+  16         1883528         1909127   100.0 MiB   FFFF  odm_b
+  17         1909128         1913223   16.0 MiB    FFFF  metadata
+  18         1913224         1945991   128.0 MiB   FFFF  rawdump
+  19         1945992        61409274   226.8 GiB   FFFF  userdata
+```
+You may have different size userdata - mine is 256gb - depending on your device but that doesn't matter. You just need to see where they're located<br/>
+Take note of the **number** (I'll call *userdata_num* for the sake of this tutorial) and **start sector** (*userdata_start*) for the first partition AFTER rawdump, and the **end sector** (*userdata_end*) of the last parititon on sda
+
+* `sgdisk /dev/block/sda --change-name=17:metadata` - renames metadata partition back to non-ab stock
+* `sgdisk /dev/block/sda --delete=19` - this deletes the entire partition - use this command for each user/metadata partition after rawdump (ones generated by this zip)
+* `sgdisk /dev/block/sda --new=$userdata_num:$userdata_start:$userdata_end --change-name=$userdata_num:userdata` - this creates the new userdata partition
+* Final step is to format the new userdata partition: `mke2fs -t ext4 -b 4096 /dev/block/sda$userdata_num $userdata_size` - where *userdata_size* can be calculated with this shell command: `sgdisk /dev/block/sda --print | grep "^ *$userdata_num" | awk '{print $3-$2+1}'`
+  * MAKE SURE YOU VERIFY ALL VARIABLES HERE ARE SET PROPERLY - if you mess this up, you could format all of sda resulting in a brick
+* Run `sgdisk /dev/block/sda --print` again to make sure everything is correct and then reboot back into twrp
+
+## Credits
+
+* [Teamwin](https://github.com/TeamWin)
+* [Mauronofrio](https://github.com/mauronofrio/android_device_oneplus_guacamole_unified_TWRP)
+* [CosmicDan](https://github.com/CosmicDan-Android/android_system_update_engine_tissotmanager-mod)
+* [TopJohnWu](https://github.com/topjohnwu/Magisk)
+
+## License
+
+  MIT
